@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Comment Box</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .widget { width: 100%; max-width: 560px; }
+
+    .widget-header { margin-bottom: 28px; }
+    .widget-header h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: #cc2d80;
+      line-height: 1.1;
+    }
+    .widget-header p {
+      color: #ff79b9;
+      font-size: 0.875rem;
+      margin-top: 6px;
+      font-weight: 300;
+    }
+
+    .mod-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      justify-content: flex-end;
+    }
+
+    .mod-bar input {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      border: 1.5px solid #ffb3d9;
+      border-radius: 8px;
+      background: #fff0f8;
+      color: #5a0030;
+      outline: none;
+      width: 130px;
+      transition: border-color 0.2s;
+    }
+    .mod-bar input:focus { border-color: #ff79b9; }
+
+    .mod-toggle-btn {
+      background: none;
+      border: 1.5px solid #ff79b9;
+      color: #ff79b9;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .mod-toggle-btn:hover { background: #ff79b9; color: #fff; }
+
+    .mod-active-badge {
+      display: none;
+      font-size: 0.75rem;
+      background: #ff79b9;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .form-card {
+      background: #fff;
+      border: 1.5px solid #ff79b9;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 4px 24px rgba(255,121,185,0.15);
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 14px;
+    }
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #ff79b9;
+      margin-bottom: 6px;
+    }
+
+    input, textarea {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 300;
+      color: #5a0030;
+      background: #fff0f8;
+      border: 1.5px solid #ffb3d9;
+      border-radius: 10px;
+      padding: 10px 14px;
+      width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      resize: none;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #ff79b9;
+      box-shadow: 0 0 0 3px rgba(255,121,185,0.2);
+      background: #fff;
+    }
+
+    textarea { min-height: 110px; }
+
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      background: #ff79b9;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .submit-btn:hover { background: #e8529f; }
+    .submit-btn:active { transform: scale(0.99); }
+
+    .success-msg {
+      display: none;
+      text-align: center;
+      padding: 18px;
+      background: #fff0f8;
+      border: 1.5px solid #ff79b9;
+      border-radius: 10px;
+      color: #cc2d80;
+      font-size: 0.9rem;
+      margin-top: 14px;
+    }
+
+    .comments-section h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      color: #cc2d80;
+      margin-bottom: 16px;
+    }
+
+    .comment-card {
+      background: #fff;
+      border: 1.5px solid #ffb3d9;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      animation: fadeIn 0.35s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .comment-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .comment-author {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #cc2d80;
+    }
+
+    .comment-date {
+      font-size: 0.75rem;
+      color: #ff79b9;
+    }
+
+    .comment-text {
+      font-size: 0.875rem;
+      color: #5a0030;
+      font-weight: 300;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .comment-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s;
+    }
+
+    .reply-btn { color: #ff79b9; }
+    .reply-btn:hover { color: #cc2d80; }
+
+    .delete-btn { color: #ffb3d9; }
+    .delete-btn:hover { color: #e8529f; }
+
+    .mod-delete-btn {
+      display: none;
+      background: none;
+      border: 1px solid #ffb3d9;
+      border-radius: 6px;
+      color: #e8529f;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 2px 9px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .mod-delete-btn:hover { background: #e8529f; color: #fff; border-color: #e8529f; }
+    body.mod-mode .mod-delete-btn { display: inline-block; }
+
+    .reply-form {
+      display: none;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #ffe0f0;
+    }
+
+    .reply-form input {
+      margin-bottom: 8px;
+      font-size: 0.83rem;
+      padding: 8px 12px;
+    }
+
+    .reply-form textarea {
+      min-height: 70px;
+      margin-bottom: 8px;
+      font-size: 0.83rem;
+      padding: 8px 12px;
+    }
+
+    .reply-submit-btn {
+      background: #ff79b9;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .reply-submit-btn:hover { background: #e8529f; }
+
+    .reply-cancel-btn {
+      background: none;
+      border: none;
+      color: #ffb3d9;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: color 0.15s;
+    }
+    .reply-cancel-btn:hover { color: #cc2d80; }
+
+    .replies-list {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #ffe0f0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .reply-card {
+      background: #fff8fc;
+      border-left: 3px solid #ff79b9;
+      border-radius: 0 8px 8px 0;
+      padding: 10px 14px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .reply-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .reply-author {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #cc2d80;
+    }
+
+    .reply-date {
+      font-size: 0.7rem;
+      color: #ff79b9;
+    }
+
+    .reply-text {
+      font-size: 0.82rem;
+      color: #5a0030;
+      font-weight: 300;
+      line-height: 1.5;
+      margin-bottom: 6px;
+    }
+
+    .reply-actions { display: flex; gap: 8px; align-items: center; }
+
+    .empty-state {
+      text-align: center;
+      color: #ff79b9;
+      font-size: 0.875rem;
+      padding: 20px 0;
+      font-style: italic;
+    }
+
+    .loading-state {
+      text-align: center;
+      color: #ffb3d9;
+      font-size: 0.875rem;
+      padding: 20px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="widget">
+  <div class="widget-header">
+    <h2>Leave a Comment</h2>
+  </div>
+
+  <div class="mod-bar">
+    <span class="mod-active-badge" id="mod-badge">🛡 Moderator mode on</span>
+    <input type="password" id="mod-password" placeholder="Moderator password" />
+    <button class="mod-toggle-btn" onclick="toggleMod()">Unlock</button>
+  </div>
+
+  <div class="form-card">
+    <div class="form-group">
+      <label for="name">Your Name</label>
+      <input type="text" id="name" placeholder="Jane Smith" />
+    </div>
+    <div class="form-group">
+      <label for="comment">Comment</label>
+      <textarea id="comment" placeholder="Share your thoughts…"></textarea>
+    </div>
+    <button class="submit-btn" onclick="submitComment()">Post Comment</button>
+    <div class="success-msg" id="success">Thanks for your comment! It's been posted below.</div>
+  </div>
+
+  <div class="comments-section">
+    <h3>Comments</h3>
+    <div id="comments-list">
+      <p class="loading-state">Loading comments…</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Storage helpers ──────────────────────────────────────────────
+  // Uses window.storage (persistent key-value store available in Claude artifacts).
+  // All comment data is stored under the shared key "comments_data" so every
+  // visitor sees the same set of comments.
+
+  const STORAGE_KEY = 'comments_data';
+  const SESSION_ID  = 'sess_' + Math.random().toString(36).slice(2);
+  const MOD_PASSWORD = 'bri';
+  let modMode = false;
+
+  // Load the full comments array from shared storage
+  async function loadComments() {
+    try {
+      const result = await window.storage.get(STORAGE_KEY, true); // shared=true
+      return result ? JSON.parse(result.value) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  // Persist the full comments array to shared storage
+  async function saveComments(comments) {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(comments), true);
+  }
+
+  // ── Render ───────────────────────────────────────────────────────
+
+  async function renderComments() {
+    const list = document.getElementById('comments-list');
+    const comments = await loadComments();
+
+    if (!comments.length) {
+      list.innerHTML = '<p class="empty-state">No comments yet — be the first!</p>';
+      return;
+    }
+
+    list.innerHTML = '';
+    // Newest first
+    [...comments].reverse().forEach(c => list.appendChild(buildCommentCard(c)));
+  }
+
+  function buildCommentCard(c) {
+    const card = document.createElement('div');
+    card.className = 'comment-card';
+    card.dataset.id = c.id;
+
+    const isOwner = c.owner === SESSION_ID;
+
+    card.innerHTML = `
+      <div class="comment-meta">
+        <span class="comment-author">${escHtml(c.author)}</span>
+        <span class="comment-date">${c.date}</span>
+      </div>
+      <p class="comment-text">${escHtml(c.text)}</p>
+      <div class="comment-actions">
+        <button class="action-btn reply-btn" onclick="toggleReplyForm('${c.id}')">↩ Reply</button>
+        ${isOwner ? `<button class="action-btn delete-btn" onclick="deleteComment('${c.id}')">✕ Delete</button>` : ''}
+        <button class="mod-delete-btn" onclick="modDeleteComment('${c.id}')">🛡 Remove</button>
+      </div>
+      <div class="reply-form" id="reply-form-${c.id}">
+        <input type="text" id="reply-name-${c.id}" placeholder="Your name" />
+        <textarea id="reply-text-${c.id}" placeholder="Write a reply…"></textarea>
+        <div>
+          <button class="reply-submit-btn" onclick="submitReply('${c.id}')">Post Reply</button>
+          <button class="reply-cancel-btn" onclick="toggleReplyForm('${c.id}')">Cancel</button>
+        </div>
+      </div>
+      <div class="replies-list" id="replies-${c.id}" ${c.replies && c.replies.length ? '' : 'style="display:none"'}>
+        ${(c.replies || []).map(r => buildReplyHTML(r)).join('')}
+      </div>
+    `;
+    return card;
+  }
+
+  function buildReplyHTML(r) {
+    const isOwner = r.owner === SESSION_ID;
+    return `
+      <div class="reply-card" data-id="${r.id}" data-owner="${r.owner}">
+        <div class="reply-meta">
+          <span class="reply-author">${escHtml(r.author)}</span>
+          <span class="reply-date">${r.date}</span>
+        </div>
+        <p class="reply-text">${escHtml(r.text)}</p>
+        <div class="reply-actions">
+          ${isOwner ? `<button class="action-btn delete-btn" onclick="deleteReply('${r.id}', this)">✕ Delete reply</button>` : ''}
+          <button class="mod-delete-btn" onclick="modDeleteReply('${r.id}', this)">🛡 Remove</button>
+        </div>
+      </div>`;
+  }
+
+  // ── Submit comment ───────────────────────────────────────────────
+
+  async function submitComment() {
+    const name    = document.getElementById('name').value.trim();
+    const comment = document.getElementById('comment').value.trim();
+    if (!name)    { alert('Please enter your name.');    return; }
+    if (!comment) { alert('Please write a comment.');    return; }
+
+    const comments = await loadComments();
+    const newComment = {
+      id:      'c_' + Date.now(),
+      author:  name,
+      text:    comment,
+      date:    formatDate(),
+      owner:   SESSION_ID,
+      replies: []
+    };
+    comments.push(newComment);
+    await saveComments(comments);
+
+    document.getElementById('name').value    = '';
+    document.getElementById('comment').value = '';
+
+    await renderComments();
+
+    const msg = document.getElementById('success');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 3500);
+  }
+
+  // ── Submit reply ─────────────────────────────────────────────────
+
+  async function submitReply(commentId) {
+    const nameEl = document.getElementById('reply-name-' + commentId);
+    const textEl = document.getElementById('reply-text-' + commentId);
+    const name   = nameEl.value.trim();
+    const text   = textEl.value.trim();
+    if (!name) { alert('Please enter your name.');  return; }
+    if (!text) { alert('Please write a reply.');    return; }
+
+    const comments = await loadComments();
+    const comment  = comments.find(c => c.id === commentId);
+    if (!comment) return;
+
+    comment.replies = comment.replies || [];
+    comment.replies.push({
+      id:     'r_' + Date.now(),
+      author: name,
+      text,
+      date:   formatDate(),
+      owner:  SESSION_ID
+    });
+    await saveComments(comments);
+    await renderComments();
+  }
+
+  // ── Delete comment (own) ─────────────────────────────────────────
+
+  async function deleteComment(id) {
+    const card = document.querySelector(`.comment-card[data-id="${id}"]`);
+    if (!card) return;
+
+    const comments = await loadComments();
+    const idx = comments.findIndex(c => c.id === id);
+    if (idx === -1 || comments[idx].owner !== SESSION_ID) return;
+
+    comments.splice(idx, 1);
+    await saveComments(comments);
+    await renderComments();
+  }
+
+  // ── Mod delete comment ───────────────────────────────────────────
+
+  async function modDeleteComment(id) {
+    if (!modMode) return;
+    if (!confirm('Remove this comment?')) return;
+
+    const comments = await loadComments();
+    const idx = comments.findIndex(c => c.id === id);
+    if (idx === -1) return;
+
+    comments.splice(idx, 1);
+    await saveComments(comments);
+    await renderComments();
+  }
+
+  // ── Delete reply (own) ───────────────────────────────────────────
+
+  async function deleteReply(replyId, btn) {
+    const replyCard = btn.closest('.reply-card');
+    if (!replyCard || replyCard.dataset.owner !== SESSION_ID) return;
+
+    const commentCard = btn.closest('.comment-card');
+    const commentId   = commentCard ? commentCard.dataset.id : null;
+    if (!commentId) return;
+
+    const comments = await loadComments();
+    const comment  = comments.find(c => c.id === commentId);
+    if (!comment) return;
+
+    comment.replies = (comment.replies || []).filter(r => r.id !== replyId);
+    await saveComments(comments);
+    await renderComments();
+  }
+
+  // ── Mod delete reply ─────────────────────────────────────────────
+
+  async function modDeleteReply(replyId, btn) {
+    if (!modMode) return;
+    if (!confirm('Remove this reply?')) return;
+
+    const commentCard = btn.closest('.comment-card');
+    const commentId   = commentCard ? commentCard.dataset.id : null;
+    if (!commentId) return;
+
+    const comments = await loadComments();
+    const comment  = comments.find(c => c.id === commentId);
+    if (!comment) return;
+
+    comment.replies = (comment.replies || []).filter(r => r.id !== replyId);
+    await saveComments(comments);
+    await renderComments();
+  }
+
+  // ── Reply form toggle ────────────────────────────────────────────
+
+  function toggleReplyForm(commentId) {
+    const form = document.getElementById('reply-form-' + commentId);
+    const open = form.style.display === 'block';
+    form.style.display = open ? 'none' : 'block';
+    if (!open) document.getElementById('reply-name-' + commentId).focus();
+  }
+
+  // ── Mod mode ─────────────────────────────────────────────────────
+
+  function toggleMod() {
+    const pw = document.getElementById('mod-password').value;
+    if (!modMode) {
+      if (pw === MOD_PASSWORD) {
+        modMode = true;
+        document.body.classList.add('mod-mode');
+        document.getElementById('mod-badge').style.display = 'inline-block';
+        document.getElementById('mod-password').style.display = 'none';
+        document.querySelector('.mod-toggle-btn').textContent = 'Lock';
+        document.getElementById('mod-password').value = '';
+      } else {
+        alert('Incorrect password.');
+      }
+    } else {
+      modMode = false;
+      document.body.classList.remove('mod-mode');
+      document.getElementById('mod-badge').style.display = 'none';
+      document.getElementById('mod-password').style.display = '';
+      document.querySelector('.mod-toggle-btn').textContent = 'Unlock';
+    }
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatDate() {
+    return new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────
+  renderComments();
+</script>
+</body>
+</html>
