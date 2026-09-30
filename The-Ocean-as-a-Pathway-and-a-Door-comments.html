@@ -380,9 +380,19 @@
     if (btn.dataset.armed) return true;
     btn.dataset.armed = '1';
     const orig = btn.textContent;
+    btn.dataset.orig = orig;
     btn.textContent = 'Click again to confirm';
-    setTimeout(() => { delete btn.dataset.armed; btn.textContent = orig; }, 3000);
+    btn._t = setTimeout(() => { delete btn.dataset.armed; btn.textContent = orig; }, 3000);
     return false;
+  }
+
+  // Shows the failure right on the button you clicked, so it can't be missed
+  function btnError(btn, e) {
+    clearTimeout(btn._t);
+    delete btn.dataset.armed;
+    const orig = btn.dataset.orig || '🛡 Remove';
+    btn.textContent = 'Failed: ' + (e.code || e.message);
+    btn._t = setTimeout(() => { btn.textContent = orig; }, 8000);
   }
 
   function formatDate(ts) {
@@ -525,6 +535,7 @@
     } catch (e) {
       console.error(e);
       toast('Could not remove comment: ' + e.message);
+      btnError(btn, e);
     }
   };
 
@@ -551,6 +562,7 @@
     } catch (e) {
       console.error(e);
       toast('Could not remove reply: ' + e.message);
+      btnError(btn, e);
     }
   };
 
