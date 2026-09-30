@@ -359,6 +359,32 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  // In-page message (replaces alert(), which embeds often block)
+  function toast(msg) {
+    let t = document.getElementById('toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast';
+      t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#cc2d80;color:#fff;padding:10px 18px;border-radius:10px;font-size:.85rem;z-index:9999;max-width:90%;text-align:center';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.display = 'block';
+    clearTimeout(t._h);
+    t._h = setTimeout(() => t.style.display = 'none', 4000);
+  }
+
+  // In-page confirmation (replaces confirm()):
+  // first click arms the button, second click within 3s confirms
+  function confirmClick(btn) {
+    if (btn.dataset.armed) return true;
+    btn.dataset.armed = '1';
+    const orig = btn.textContent;
+    btn.textContent = 'Click again to confirm';
+    setTimeout(() => { delete btn.dataset.armed; btn.textContent = orig; }, 3000);
+    return false;
+  }
+
   function formatDate(ts) {
     const d = ts ? ts.toDate() : new Date();
     return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
@@ -379,6 +405,7 @@
         list.appendChild(buildCommentCard({ id: docSnap.id, ...docSnap.data() }));
       });
     } catch(e) {
+      console.error(e);
       list.innerHTML = '<p class="empty-state">Could not load comments. Please refresh.</p>';
     }
   }
@@ -398,7 +425,7 @@
       <div class="comment-actions">
         <button class="action-btn reply-btn" onclick="toggleReplyForm('${c.id}')">↩ Reply</button>
         ${isOwner ? `<button class="action-btn delete-btn" onclick="deleteComment('${c.id}')">✕ Delete</button>` : ''}
-        <button class="mod-delete-btn" onclick="modDeleteComment('${c.id}')">🛡 Remove</button>
+        <button class="mod-delete-btn" onclick="modDeleteComment('${c.id}', this)">🛡 Remove</button>
       </div>
       <div class="reply-form" id="reply-form-${c.id}">
         <input type="text" id="reply-name-${c.id}" placeholder="Your name" />
@@ -434,8 +461,8 @@
   window.submitComment = async function() {
     const name    = document.getElementById('name').value.trim();
     const comment = document.getElementById('comment').value.trim();
-    if (!name)    { alert('Please enter your name.');  return; }
-    if (!comment) { alert('Please write a comment.');  return; }
+    if (!name)    { toast('Please enter your name.');  return; }
+    if (!comment) { toast('Please write a comment.');  return; }
     const btn = document.getElementById('submit-btn');
     btn.disabled = true; btn.textContent = 'Posting…';
     try {
@@ -449,7 +476,10 @@
       const msg = document.getElementById('success');
       msg.style.display = 'block';
       setTimeout(() => msg.style.display = 'none', 3500);
-    } catch(e) { alert('Could not post comment. Please try again.'); }
+    } catch(e) {
+      console.error(e);
+      toast('Could not post comment: ' + e.message);
+    }
     btn.disabled = false; btn.textContent = 'Post Comment';
   };
 
@@ -457,8 +487,8 @@
     const nameEl = document.getElementById('reply-name-' + commentId);
     const textEl = document.getElementById('reply-text-' + commentId);
     const name = nameEl.value.trim(), text = textEl.value.trim();
-    if (!name) { alert('Please enter your name.'); return; }
-    if (!text) { alert('Please write a reply.');   return; }
+    if (!name) { toast('Please enter your name.'); return; }
+    if (!text) { toast('Please write a reply.');   return; }
     try {
       const snap = await getDocs(collection(db, POST_ID));
       const commentDoc = snap.docs.find(d => d.id === commentId);
@@ -472,19 +502,30 @@
       });
       nameEl.value = ''; textEl.value = '';
       await renderComments();
-    } catch(e) { alert('Could not post reply. Please try again.'); }
+    } catch(e) {
+      console.error(e);
+      toast('Could not post reply: ' + e.message);
+    }
   };
 
   window.deleteComment = async function(id) {
     try { await deleteDoc(doc(db, POST_ID, id)); await renderComments(); }
-    catch(e) { alert('Could not delete comment.'); }
+    catch(e) {
+      console.error(e);
+      toast('Could not delete comment: ' + e.message);
+    }
   };
 
-  window.modDeleteComment = async function(id) {
+  window.modDeleteComment = async function(id, btn) {
     if (!modMode) return;
-    if (!confirm('Remove this comment?')) return;
-    try { await deleteDoc(doc(db, POST_ID, id)); await renderComments(); }
-    catch(e) { alert('Could not remove comment.'); }
+    if (!confirmClick(btn)) return;
+    try {
+      await deleteDoc(doc(db, POST_ID, id));
+      await renderComments();
+    } catch (e) {
+      console.error(e);
+      toast('Could not remove comment: ' + e.message);
+    }
   };
 
   window.deleteReply = async function(replyId, commentId, btn) {
@@ -493,18 +534,24 @@
       const existing = snap.docs.find(d => d.id === commentId)?.data().replies || [];
       await updateDoc(doc(db, POST_ID, commentId), { replies: existing.filter(r => r.id !== replyId) });
       await renderComments();
-    } catch(e) { alert('Could not delete reply.'); }
+    } catch(e) {
+      console.error(e);
+      toast('Could not delete reply: ' + e.message);
+    }
   };
 
   window.modDeleteReply = async function(replyId, commentId, btn) {
     if (!modMode) return;
-    if (!confirm('Remove this reply?')) return;
+    if (!confirmClick(btn)) return;
     try {
       const snap = await getDocs(collection(db, POST_ID));
       const existing = snap.docs.find(d => d.id === commentId)?.data().replies || [];
       await updateDoc(doc(db, POST_ID, commentId), { replies: existing.filter(r => r.id !== replyId) });
       await renderComments();
-    } catch(e) { alert('Could not remove reply.'); }
+    } catch (e) {
+      console.error(e);
+      toast('Could not remove reply: ' + e.message);
+    }
   };
 
   window.toggleReplyForm = function(commentId) {
@@ -524,7 +571,7 @@
         document.getElementById('mod-password').style.display = 'none';
         document.querySelector('.mod-toggle-btn').textContent = 'Lock';
         document.getElementById('mod-password').value = '';
-      } else { alert('Incorrect password.'); }
+      } else { toast('Incorrect password.'); }
     } else {
       modMode = false;
       document.body.classList.remove('mod-mode');
