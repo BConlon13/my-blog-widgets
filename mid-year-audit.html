@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Comment Box</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .widget { width: 100%; max-width: 560px; }
+
+    .widget-header { margin-bottom: 28px; }
+    .widget-header h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: #ff2d95;
+      line-height: 1.1;
+    }
+
+    .mod-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      justify-content: flex-end;
+    }
+
+    .mod-bar input {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      border: 1.5px solid #ffc58a;
+      border-radius: 8px;
+      background: #fff4e8;
+      color: #3d1a00;
+      outline: none;
+      width: 130px;
+      transition: border-color 0.2s;
+    }
+    .mod-bar input:focus { border-color: #ff7a00; }
+
+    .mod-toggle-btn {
+      background: none;
+      border: 1.5px solid #ff7a00;
+      color: #ff7a00;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .mod-toggle-btn:hover { background: #ff7a00; color: #fff; }
+
+    .mod-active-badge {
+      display: none;
+      font-size: 0.75rem;
+      background: #ff2d95;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .form-card {
+      background: #fff;
+      border: 1.5px solid #ff7a00;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 4px 24px rgba(255,122,0,0.18);
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 14px;
+    }
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #ff7a00;
+      margin-bottom: 6px;
+    }
+
+    input, textarea {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 300;
+      color: #3d1a00;
+      background: #fff4e8;
+      border: 1.5px solid #ffc58a;
+      border-radius: 10px;
+      padding: 10px 14px;
+      width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      resize: none;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #ff7a00;
+      box-shadow: 0 0 0 3px rgba(255,122,0,0.22);
+      background: #fff;
+    }
+
+    textarea { min-height: 110px; }
+
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      background: #ff7a00;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .submit-btn:hover { background: #e85d00; }
+    .submit-btn:active { transform: scale(0.99); }
+    .submit-btn:disabled { background: #ffc58a; cursor: not-allowed; }
+
+    .success-msg {
+      display: none;
+      text-align: center;
+      padding: 18px;
+      background: #fff4e8;
+      border: 1.5px solid #ff7a00;
+      border-radius: 10px;
+      color: #ff2d95;
+      font-size: 0.9rem;
+      margin-top: 14px;
+    }
+
+    .comments-section h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      color: #ff2d95;
+      margin-bottom: 16px;
+    }
+
+    .comment-card {
+      background: #fff;
+      border: 1.5px solid #ffc58a;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      animation: fadeIn 0.35s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .comment-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .comment-author { font-weight: 500; font-size: 0.9rem; color: #ff2d95; }
+    .comment-date { font-size: 0.75rem; color: #ff7a00; }
+
+    .comment-text {
+      font-size: 0.875rem;
+      color: #3d1a00;
+      font-weight: 300;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .comment-actions { display: flex; gap: 10px; align-items: center; }
+
+    .action-btn {
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s;
+    }
+
+    .reply-btn { color: #ff7a00; }
+    .reply-btn:hover { color: #ff2d95; }
+    .delete-btn { color: #ff9a4d; }
+    .delete-btn:hover { color: #e85d00; }
+
+    .mod-delete-btn {
+      display: none;
+      background: none;
+      border: 1px solid #ffc58a;
+      border-radius: 6px;
+      color: #e85d00;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 2px 9px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .mod-delete-btn:hover { background: #e85d00; color: #fff; border-color: #e85d00; }
+    body.mod-mode .mod-delete-btn { display: inline-block; }
+
+    .reply-form {
+      display: none;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #ffe3c7;
+    }
+
+    .reply-form input { margin-bottom: 8px; font-size: 0.83rem; padding: 8px 12px; }
+    .reply-form textarea { min-height: 70px; margin-bottom: 8px; font-size: 0.83rem; padding: 8px 12px; }
+
+    .reply-submit-btn {
+      background: #ff7a00;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .reply-submit-btn:hover { background: #e85d00; }
+
+    .reply-cancel-btn {
+      background: none;
+      border: none;
+      color: #ffc58a;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: color 0.15s;
+    }
+    .reply-cancel-btn:hover { color: #ff2d95; }
+
+    .replies-list {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #ffe3c7;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .reply-card {
+      background: #fff9f2;
+      border-left: 3px solid #ff2d95;
+      border-radius: 0 8px 8px 0;
+      padding: 10px 14px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .reply-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .reply-author { font-size: 0.8rem; font-weight: 500; color: #ff2d95; }
+    .reply-date { font-size: 0.7rem; color: #ff7a00; }
+    .reply-text { font-size: 0.82rem; color: #3d1a00; font-weight: 300; line-height: 1.5; margin-bottom: 6px; }
+    .reply-actions { display: flex; gap: 8px; align-items: center; }
+
+    .empty-state {
+      text-align: center;
+      color: #ff7a00;
+      font-size: 0.875rem;
+      padding: 20px 0;
+      font-style: italic;
+    }
+
+    .loading-state {
+      text-align: center;
+      color: #ffc58a;
+      font-size: 0.875rem;
+      padding: 20px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="widget">
+  <div class="widget-header">
+    <h2>Leave a Comment</h2>
+  </div>
+
+  <div class="mod-bar">
+    <span class="mod-active-badge" id="mod-badge">🛡 Moderator mode on</span>
+    <input type="password" id="mod-password" placeholder="Moderator password" />
+    <button class="mod-toggle-btn" onclick="toggleMod()">Unlock</button>
+  </div>
+
+  <div class="form-card">
+    <div class="form-group">
+      <label for="name">Your Name</label>
+      <input type="text" id="name" placeholder="Jane Smith" />
+    </div>
+    <div class="form-group">
+      <label for="comment">Comment</label>
+      <textarea id="comment" placeholder="Share your thoughts…"></textarea>
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="submitComment()">Post Comment</button>
+    <div class="success-msg" id="success">Thanks for your comment! It's been posted below.</div>
+  </div>
+
+  <div class="comments-section">
+    <h3>Comments</h3>
+    <div id="comments-list">
+      <p class="loading-state">Loading comments…</p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, orderBy, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCN7UnVmdrJwynzLfw3E8gFe512GOaQdDM",
+    authDomain: "my-blog-comments-4d598.firebaseapp.com",
+    projectId: "my-blog-comments-4d598",
+    storageBucket: "my-blog-comments-4d598.firebasestorage.app",
+    messagingSenderId: "707213041627",
+    appId: "1:707213041627:web:a432c41d72c7c8ca8a11fe"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // !! CHANGE THIS for every new blog post — use any unique name, no spaces !!
+  const POST_ID = 'Mid-year-audit-comments';
+
+  const SESSION_ID = 'sess_' + Math.random().toString(36).slice(2);
+  const MOD_PASSWORD = 'bri';
+  let modMode = false;
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // In-page message (replaces alert(), which embeds often block)
+  function toast(msg) {
+    let t = document.getElementById('toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast';
+      t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#ff2d95;color:#fff;padding:10px 18px;border-radius:10px;font-size:.85rem;z-index:9999;max-width:90%;text-align:center';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.display = 'block';
+    clearTimeout(t._h);
+    t._h = setTimeout(() => t.style.display = 'none', 4000);
+  }
+
+  // In-page confirmation (replaces confirm()):
+  // first click arms the button, second click within 3s confirms
+  function confirmClick(btn) {
+    if (btn.dataset.armed) return true;
+    btn.dataset.armed = '1';
+    const orig = btn.textContent;
+    btn.dataset.orig = orig;
+    btn.textContent = 'Click again to confirm';
+    btn._t = setTimeout(() => { delete btn.dataset.armed; btn.textContent = orig; }, 3000);
+    return false;
+  }
+
+  // Shows the failure right on the button you clicked, so it can't be missed
+  function btnError(btn, e) {
+    clearTimeout(btn._t);
+    delete btn.dataset.armed;
+    const orig = btn.dataset.orig || '🛡 Remove';
+    btn.textContent = 'Failed: ' + (e.code || e.message);
+    btn._t = setTimeout(() => { btn.textContent = orig; }, 8000);
+  }
+
+  function formatDate(ts) {
+    const d = ts ? ts.toDate() : new Date();
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  }
+
+  async function renderComments() {
+    const list = document.getElementById('comments-list');
+    list.innerHTML = '<p class="loading-state">Loading comments…</p>';
+    try {
+      const q = query(collection(db, POST_ID), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) {
+        list.innerHTML = '<p class="empty-state">No comments yet — be the first!</p>';
+        return;
+      }
+      list.innerHTML = '';
+      snapshot.forEach(docSnap => {
+        list.appendChild(buildCommentCard({ id: docSnap.id, ...docSnap.data() }));
+      });
+    } catch(e) {
+      console.error(e);
+      list.innerHTML = '<p class="empty-state">Could not load comments. Please refresh.</p>';
+    }
+  }
+
+  function buildCommentCard(c) {
+    const card = document.createElement('div');
+    card.className = 'comment-card';
+    card.dataset.id = c.id;
+    const isOwner = c.owner === SESSION_ID;
+    const replies = c.replies || [];
+    card.innerHTML = `
+      <div class="comment-meta">
+        <span class="comment-author">${escHtml(c.author)}</span>
+        <span class="comment-date">${formatDate(c.createdAt)}</span>
+      </div>
+      <p class="comment-text">${escHtml(c.text)}</p>
+      <div class="comment-actions">
+        <button class="action-btn reply-btn" onclick="toggleReplyForm('${c.id}')">↩ Reply</button>
+        ${isOwner ? `<button class="action-btn delete-btn" onclick="deleteComment('${c.id}')">✕ Delete</button>` : ''}
+        <button class="mod-delete-btn" onclick="modDeleteComment('${c.id}', this)">🛡 Remove</button>
+      </div>
+      <div class="reply-form" id="reply-form-${c.id}">
+        <input type="text" id="reply-name-${c.id}" placeholder="Your name" />
+        <textarea id="reply-text-${c.id}" placeholder="Write a reply…"></textarea>
+        <div>
+          <button class="reply-submit-btn" onclick="submitReply('${c.id}')">Post Reply</button>
+          <button class="reply-cancel-btn" onclick="toggleReplyForm('${c.id}')">Cancel</button>
+        </div>
+      </div>
+      <div class="replies-list" id="replies-${c.id}" ${replies.length ? '' : 'style="display:none"'}>
+        ${replies.map(r => buildReplyHTML(r, c.id)).join('')}
+      </div>
+    `;
+    return card;
+  }
+
+  function buildReplyHTML(r, commentId) {
+    const isOwner = r.owner === SESSION_ID;
+    return `
+      <div class="reply-card" data-id="${r.id}">
+        <div class="reply-meta">
+          <span class="reply-author">${escHtml(r.author)}</span>
+          <span class="reply-date">${r.date}</span>
+        </div>
+        <p class="reply-text">${escHtml(r.text)}</p>
+        <div class="reply-actions">
+          ${isOwner ? `<button class="action-btn delete-btn" onclick="deleteReply('${r.id}','${commentId}',this)">✕ Delete reply</button>` : ''}
+          <button class="mod-delete-btn" onclick="modDeleteReply('${r.id}','${commentId}',this)">🛡 Remove</button>
+        </div>
+      </div>`;
+  }
+
+  window.submitComment = async function() {
+    const name    = document.getElementById('name').value.trim();
+    const comment = document.getElementById('comment').value.trim();
+    if (!name)    { toast('Please enter your name.');  return; }
+    if (!comment) { toast('Please write a comment.');  return; }
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.textContent = 'Posting…';
+    try {
+      await addDoc(collection(db, POST_ID), {
+        author: name, text: comment, owner: SESSION_ID,
+        createdAt: serverTimestamp(), replies: []
+      });
+      document.getElementById('name').value = '';
+      document.getElementById('comment').value = '';
+      await renderComments();
+      const msg = document.getElementById('success');
+      msg.style.display = 'block';
+      setTimeout(() => msg.style.display = 'none', 3500);
+    } catch(e) {
+      console.error(e);
+      toast('Could not post comment: ' + e.message);
+    }
+    btn.disabled = false; btn.textContent = 'Post Comment';
+  };
+
+  window.submitReply = async function(commentId) {
+    const nameEl = document.getElementById('reply-name-' + commentId);
+    const textEl = document.getElementById('reply-text-' + commentId);
+    const name = nameEl.value.trim(), text = textEl.value.trim();
+    if (!name) { toast('Please enter your name.'); return; }
+    if (!text) { toast('Please write a reply.');   return; }
+    try {
+      const snap = await getDocs(collection(db, POST_ID));
+      const commentDoc = snap.docs.find(d => d.id === commentId);
+      const existing = commentDoc?.data().replies || [];
+      await updateDoc(doc(db, POST_ID, commentId), {
+        replies: [...existing, {
+          id: 'r_' + Date.now(), author: name, text,
+          date: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }),
+          owner: SESSION_ID
+        }]
+      });
+      nameEl.value = ''; textEl.value = '';
+      await renderComments();
+    } catch(e) {
+      console.error(e);
+      toast('Could not post reply: ' + e.message);
+    }
+  };
+
+  window.deleteComment = async function(id) {
+    try { await deleteDoc(doc(db, POST_ID, id)); await renderComments(); }
+    catch(e) {
+      console.error(e);
+      toast('Could not delete comment: ' + e.message);
+    }
+  };
+
+  window.modDeleteComment = async function(id, btn) {
+    if (!modMode) return;
+    if (!confirmClick(btn)) return;
+    try {
+      await deleteDoc(doc(db, POST_ID, id));
+      await renderComments();
+    } catch (e) {
+      console.error(e);
+      toast('Could not remove comment: ' + e.message);
+      btnError(btn, e);
+    }
+  };
+
+  window.deleteReply = async function(replyId, commentId, btn) {
+    try {
+      const snap = await getDocs(collection(db, POST_ID));
+      const existing = snap.docs.find(d => d.id === commentId)?.data().replies || [];
+      await updateDoc(doc(db, POST_ID, commentId), { replies: existing.filter(r => r.id !== replyId) });
+      await renderComments();
+    } catch(e) {
+      console.error(e);
+      toast('Could not delete reply: ' + e.message);
+    }
+  };
+
+  window.modDeleteReply = async function(replyId, commentId, btn) {
+    if (!modMode) return;
+    if (!confirmClick(btn)) return;
+    try {
+      const snap = await getDocs(collection(db, POST_ID));
+      const existing = snap.docs.find(d => d.id === commentId)?.data().replies || [];
+      await updateDoc(doc(db, POST_ID, commentId), { replies: existing.filter(r => r.id !== replyId) });
+      await renderComments();
+    } catch (e) {
+      console.error(e);
+      toast('Could not remove reply: ' + e.message);
+      btnError(btn, e);
+    }
+  };
+
+  window.toggleReplyForm = function(commentId) {
+    const form = document.getElementById('reply-form-' + commentId);
+    const open = form.style.display === 'block';
+    form.style.display = open ? 'none' : 'block';
+    if (!open) document.getElementById('reply-name-' + commentId).focus();
+  };
+
+  window.toggleMod = function() {
+    const pw = document.getElementById('mod-password').value;
+    if (!modMode) {
+      if (pw === MOD_PASSWORD) {
+        modMode = true;
+        document.body.classList.add('mod-mode');
+        document.getElementById('mod-badge').style.display = 'inline-block';
+        document.getElementById('mod-password').style.display = 'none';
+        document.querySelector('.mod-toggle-btn').textContent = 'Lock';
+        document.getElementById('mod-password').value = '';
+      } else { toast('Incorrect password.'); }
+    } else {
+      modMode = false;
+      document.body.classList.remove('mod-mode');
+      document.getElementById('mod-badge').style.display = 'none';
+      document.getElementById('mod-password').style.display = '';
+      document.querySelector('.mod-toggle-btn').textContent = 'Unlock';
+    }
+  };
+
+  renderComments();
+</script>
+</body>
+</html>
